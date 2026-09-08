@@ -39,29 +39,29 @@ Projet volontairement complet : il couvre les deux grandes familles du Data Engi
 
 ```
 ┌─────────────┐     ┌───────────────┐     ┌──────────────────────┐
-│  Producer   │───▶│  Kafka Topic   │ ───▶|  Spark Structured   │
-│  (Python)   │     │  "commandes"  │     │  Streaming           │
+│  Producer   │───▶│  Kafka Topic  │ ───▶|  Spark Structured    │
+│  (Python)   │     │  "commandes"  │     │      Streaming       │
 │  génère des │     │  (+Zookeeper) │     │ (consumer temps réel)│
 │  commandes  │     └───────────────┘     └───────────┬──────────┘
-└─────────────┘                                       │ écrit en continu
+└─────────────┘                                écrit en continu
                                                       ▼
                                           ┌─────────────────────────┐
                                           │  BRONZE (Parquet local) │
                                           │  données brutes horodat.│
                                           └───────────┬─────────────┘
                                                       │
-                                        Chaque nuit, Airflow déclenche :
+                                               Airflow déclenche 
                                                       ▼
                                           ┌─────────────────────────┐
                                           │  PySpark batch : SILVER │
                                           │ nettoyage, dédup, typage│
                                           └───────────┬─────────────┘
-                                                       ▼
+                                                      ▼
                                           ┌─────────────────────────┐
                                           │  PySpark batch : GOLD   │
                                           │  agrégats métier        │
                                           └───────────┬─────────────┘
-                                                       ▼
+                                                      ▼
                                           ┌─────────────────────────┐
                                           │  PostgreSQL             │
                                           │  table analytique finale│
