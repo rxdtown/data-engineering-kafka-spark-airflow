@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "29092:29092"
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sql/init_postgres.sql:/docker-entrypoint-initdb.d/init.sql
+
+  spark:
+    image: bitnamilegacy/spark:3.5
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    volumes:
+      - ./spark_jobs:/opt/spark_jobs
+      - ./data:/opt/data
+
+  spark-worker:
+    image: bitnamilegacy/spark:3.5
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+    depends_on:
+      - spark
+    volumes:
+      - ./spark_jobs:/opt/spark_jobs
+      - ./data:/opt/data
+
+  airflow:
+    build: ./airflow
+    user: "0:0"
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./spark_jobs:/opt/spark_jobs
+      - ./data:/opt/data
+    ports:
+      - "8081:8080"
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username admin --password admin
+               --firstname A --lastname D --role Admin --email admin@example.com || true &&
+               (airflow scheduler &) &&
+               airflow webserver"
