@@ -18,15 +18,15 @@ Producer Kafka → Spark Structured Streaming → Bronze (Parquet)
 
 ## Lancer le projet
 
-\`\`\`bash
+```bash
 docker compose up -d
-\`\`\`
+```
 
 Interface Airflow : http://localhost:8081 (admin/admin)
 
 ## Structure du projet
 
-\`\`\`
+```
 projet-de-a-z/
 ├── docker-compose.yml
 ├── producer/              # Producer Kafka Python
@@ -34,4 +34,4 @@ projet-de-a-z/
 ├── sql/                    # Initialisation PostgreSQL
 ├── airflow/                # DAGs et Dockerfile personnalisé
 └── data/                   # Données générées (non versionné)
-\`\`\`
+```
