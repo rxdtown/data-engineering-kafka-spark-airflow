@@ -1,5 +1,6 @@
 # Données générées par le pipeline (Bronze/Silver/Gold, checkpoints)
 data/
+projet_kafka_airflow_spark_guide.md
 
 # Logs Airflow générés localement
 airflow/logs/
